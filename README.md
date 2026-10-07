@@ -1,7 +1,7 @@
-# aeDNA_gauge
-The working depository for a simulated ancient environmental DNA dataset (aeDNA gauge), for the methods and scripts, and deposition of the simulated data.
+# eBench
+The working depository for a standard simulated ancient environmental DNA dataset (eBench).
 
-aeDNA gauge profiling workflow overview:
+eBench workflow overview:
 ![image](https://github.com/YCWangLab/aeDNA_gauge/blob/main/aeDNA%20gauge%20workflow%20overview.png)
 
 Our simulated datasets comprehensively incorporate the inherent characteristics of both ancient DNA (aDNA) and environmental DNA (eDNA) to the greatest extent possible. Therefore, they consist of computationally simulated reads from 600 randomly selected metagenomes of different trophic level species with varying levels of damage simulating deamination, fragmentation, and divergence, where the taxa and their abundances are known. 
