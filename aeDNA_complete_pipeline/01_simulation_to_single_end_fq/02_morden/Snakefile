@@ -1,0 +1,41 @@
+import os
+
+SCRIPT_DIR = os.path.join(workflow.basedir, "workflow", "scripts")
+STATE_DIR = os.path.join(workflow.basedir, ".state")
+
+rule all:
+    input: os.path.join(STATE_DIR, "fastq.done")
+
+rule fragment:
+    output: touch(os.path.join(STATE_DIR, "fragment.done"))
+    threads: 18
+    resources: mem_mb=70000
+    shell:
+        r"""
+        set -euo pipefail
+        mkdir -p "{STATE_DIR}"
+        bash "{SCRIPT_DIR}/atxt.sh"
+        bash "{SCRIPT_DIR}/addmicroreads.sh"
+        bash "{SCRIPT_DIR}/addanimalsreads.sh"
+        bash "{SCRIPT_DIR}/addplantsreads.sh"
+        """
+
+rule merge:
+    input: rules.fragment.output
+    output: touch(os.path.join(STATE_DIR, "merge.done"))
+    threads: 4
+    resources: mem_mb=20000
+    shell:
+        r"""
+        set -euo pipefail
+        bash "{SCRIPT_DIR}/mergemorden.sh"
+        bash "{SCRIPT_DIR}/speciesmerge.sh"
+        """
+
+rule fastq:
+    input: rules.merge.output
+    output: touch(os.path.join(STATE_DIR, "fastq.done"))
+    threads: 2
+    resources: mem_mb=10000
+    shell: 'bash "{SCRIPT_DIR}/05_fasta_to_single_end_fastq.sh"'
+
