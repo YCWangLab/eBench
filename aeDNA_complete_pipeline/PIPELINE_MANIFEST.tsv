@@ -1,0 +1,14 @@
+stage	entry_or_module	purpose
+01	01_simulation_to_single_end_fq/00_reference_download	prepare and download Truth600 reference genomes
+01	01_simulation_to_single_end_fq/02_morden	produce modern single-end FASTQ baseline
+01	01_simulation_to_single_end_fq/03_young	produce young single-end damaged FASTQ
+01	01_simulation_to_single_end_fq/04_old	produce old single-end damaged FASTQ
+01	01_simulation_to_single_end_fq/05_deeptime	produce deeptime single-end damaged FASTQ
+02	02_three_database_preparation/00_make_truth_id_list.smk	build Truth600 exact and versionless reference ID lists
+02	02_three_database_preparation/01_prepare_DB2_acc2tax.smk	prepare combined DB2 accession-to-taxid mapping
+03	03_bowtie2_mapping/original_snakemake_aeDNA_mapping.ver1.250815.smk	DB1 Standard single-end mapping
+03	03_bowtie2_mapping/01_truth600_mapping.smk	Truth600 single-end mapping
+03	03_bowtie2_mapping/04_check_overlap_before_DB3.smk	validate DB3 reference identifier overlap
+03	03_bowtie2_mapping/02_DB2_plus_truth_collection.smk	form DB2 logical candidate collection
+03	03_bowtie2_mapping/03_DB3_minus_truth_filter.smk	form DB3 post-alignment exclusion result
+04	04_merge_lca_metaDMG/02_merge_metaDMG_all4_3DB.smk	merge alignments, LCA, damage, dfit, aggregate
