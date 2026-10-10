@@ -1,0 +1,119 @@
+#!/bin/bash
+#SBATCH -p q_amd_share
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=18
+#SBATCH --mem=70000
+#SBATCH -o addyanimalsreads
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+COMMON_INPUTS_DIR=${COMMON_INPUTS_DIR:-$(cd "$SCRIPT_DIR/../../../01_common_inputs" && pwd)}
+REFERENCE_ROOT=${REFERENCE_ROOT:-$SCRIPT_DIR/../../../00_reference_download/work/split_genomes}
+
+OUTPUT_DIR="/online1/ycsc_wx/ycwang/aeDNA/young/fragmented_animalsreads"
+REF_NUCLEAR_DIR="$REFERENCE_ROOT/animals/nuclear"
+REF_MITO_DIR="$REFERENCE_ROOT/animals/mitochondrial"
+READS_DIR="/online1/ycsc_wx/ycwang/aeDNA/young/animalsreads"
+LEN_DIS_NUCLEAR="$COMMON_INPUTS_DIR/fragmentation/young_len_dis.txt"
+LEN_DIS_MITO="$COMMON_INPUTS_DIR/fragmentation/young_len_dis.txt"
+GARGAMMEL="/online1/ycsc_wx/ycwang/PATH/gargammel/bin/fragSim"
+
+mkdir -p "$OUTPUT_DIR"
+a=1
+while ((a <= 30)); do
+
+    output_nuclear="${OUTPUT_DIR}/${a}_nuclear.fa"
+    output_mito="${OUTPUT_DIR}/${a}_mito.fa"
+    rm -f "$output_nuclear" "$output_mito"
+    
+    reads_file="${READS_DIR}/${a}.animals.txt"
+    if [[ ! -f "$reads_file" ]]; then
+        echo "错误: 读取数文件 $reads_file 不存在!" >&2
+        let "a++"
+        continue
+    fi
+    
+    c=1
+    for nuclear_file in ${REF_NUCLEAR_DIR}/*.fna; do
+        bname=$(basename "$nuclear_file" .fna)
+        
+        b=$(sed -n "${c}p" "$reads_file")
+        export SEED=$((a * 1000 + c))
+        
+        if [[ -s "$nuclear_file" ]]; then
+            echo "处理样本 $a, 基因组 $bname, 核基因组读取数 $b"
+
+            index_file="${nuclear_file}.fai"
+            if [[ ! -f "$index_file" ]]; then
+                echo "为核基因组创建索引: $nuclear_file"
+                samtools faidx "$nuclear_file" || {
+                    echo "无法创建核基因组索引文件" >&2
+                    exit 1
+                }
+            fi
+
+            temp_output="${OUTPUT_DIR}/${a}_${bname}_nuclear_temp.fa"
+            "$GARGAMMEL" \
+                -n "$b" \
+                -f "$LEN_DIS_NUCLEAR" \
+                -o "${temp_output}.gz" \
+                "$nuclear_file"
+
+            if [[ -f "${temp_output}.gz" ]]; then
+                gzip -d "${temp_output}.gz"
+                cat "$temp_output" >> "$output_nuclear"
+                rm -f "$temp_output"
+                echo "成功添加 ${bname} 的核基因组片段"
+            else
+                echo "警告: ${bname} 的核基因组片段未生成!" >&2
+            fi
+        else
+            echo "警告: 核基因组文件 $nuclear_file 不存在或为空，跳过核基因组模拟"
+        fi
+        
+        mit_b=0
+
+        mito_file="${REF_MITO_DIR}/${bname}.fna"
+
+        if [[ -s "$mito_file" ]]; then
+            mito_index_file="${mito_file}.fai"
+            if [[ ! -f "$mito_index_file" ]]; then
+                echo "为线粒体基因组创建索引: $mito_file"
+                samtools faidx "$mito_file" || {
+                    echo "无法创建线粒体基因组索引文件" >&2
+                    mito_file=""
+                }
+            fi
+            
+            if [[ -n "$mito_file" ]]; then
+
+                mit_b=$((b / 100))
+
+         echo "处理样本 $a, 基因组 $bname, 线粒体读取数 $mit_b"
+                export SEED=$((a * 1000 + c + 1000000))
+                
+                temp_output="${OUTPUT_DIR}/${a}_${bname}_mito_temp.fa"
+                "$GARGAMMEL" \
+                    -n "$mit_b" \
+                    -f "$LEN_DIS_MITO" \
+                    -o "${temp_output}.gz" \
+                    "$mito_file"
+                
+                if [[ -f "${temp_output}.gz" ]]; then
+                    gzip -d "${temp_output}.gz"
+                    cat "$temp_output" >> "$output_mito"
+                    rm -f "$temp_output"
+                    echo "成功添加 ${bname} 的线粒体片段"
+                else
+                    echo "警告: ${bname} 的线粒体片段未生成!" >&2
+                fi
+            fi
+        else
+            echo "警告: 线粒体基因组文件 $mito_file 不存在或为空，跳过线粒体模拟"
+        fi
+
+        echo $mit_b >> "${READS_DIR}/${a}.mit.txt"
+        ((c++))
+    done
+    ((a++))
+done

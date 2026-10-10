@@ -1,0 +1,52 @@
+import os
+
+SCRIPT_DIR = os.path.join(workflow.basedir, "workflow", "scripts")
+STATE_DIR = os.path.join(workflow.basedir, ".state")
+
+rule all:
+    input: os.path.join(STATE_DIR, "fastq.done")
+
+rule fragment:
+    output: touch(os.path.join(STATE_DIR, "fragment.done"))
+    threads: 18
+    resources: mem_mb=70000
+    shell:
+        r"""
+        set -euo pipefail
+        mkdir -p "{STATE_DIR}"
+        bash "{SCRIPT_DIR}/addoldreads.sh"
+        """
+
+rule mutation:
+    input: rules.fragment.output
+    output: touch(os.path.join(STATE_DIR, "mutation.done"))
+    threads: 18
+    resources: mem_mb=70000
+    shell: 'bash "{SCRIPT_DIR}/mutationold.sh"'
+
+rule merge:
+    input: rules.mutation.output
+    output: touch(os.path.join(STATE_DIR, "merge.done"))
+    threads: 2
+    resources: mem_mb=10000
+    shell:
+        r"""
+        set -euo pipefail
+        bash "{SCRIPT_DIR}/03_merge_animal_plant.sh"
+        bash "{SCRIPT_DIR}/04_merge_all_sources.sh"
+        """
+
+rule damage:
+    input: rules.merge.output
+    output: touch(os.path.join(STATE_DIR, "damage.done"))
+    threads: 2
+    resources: mem_mb=70000
+    shell: 'bash "{SCRIPT_DIR}/03_damage_old.sh"'
+
+rule fastq:
+    input: rules.damage.output
+    output: touch(os.path.join(STATE_DIR, "fastq.done"))
+    threads: 2
+    resources: mem_mb=10000
+    shell: 'bash "{SCRIPT_DIR}/04_fasta_to_single_end_fastq.sh"'
+
