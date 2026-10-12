@@ -1,5 +1,15 @@
 stage	entry_or_module	purpose
+00	README.md	workflow overview and reproduction entry point
+00	METHODS.md	manuscript-ready design and parameter description
+00	docs/PATHS_AND_CONFIGURATION.md	site-specific path and cluster configuration guide
+00	docs/CODE_GUIDE.md	purpose of every executable and support file
+00	docs/PROVENANCE.md	upstream source and code-selection provenance
+00	docs/METADATA_AUDIT.md	audit seven biological categories within three execution groups
+00	docs/REPRODUCIBILITY_CHECKLIST.md	pre-run, analysis, and publication checklist
+00	scripts/preflight.py	structural input and unresolved-path audit
+00	GITHUB_UPLOAD.md	local review and GitHub upload instructions
 01	01_simulation_to_single_end_fq/00_reference_download	prepare and download Truth600 reference genomes
+01	01_simulation_to_single_end_fq/00_reference_download/select_truth600.py	randomly select seven categories and create three execution lists
 01	01_simulation_to_single_end_fq/02_morden	produce modern single-end FASTQ baseline
 01	01_simulation_to_single_end_fq/03_young	produce young single-end damaged FASTQ
 01	01_simulation_to_single_end_fq/04_old	produce old single-end damaged FASTQ

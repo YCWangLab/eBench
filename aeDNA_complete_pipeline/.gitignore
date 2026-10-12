@@ -1,0 +1,34 @@
+# Generated reference downloads and selection workspaces
+01_simulation_to_single_end_fq/00_reference_download/work/
+
+# Large generated sequencing and alignment files
+*.fq
+*.fastq
+*.fq.gz
+*.fastq.gz
+*.bam
+*.bai
+*.cram
+*.crai
+*.sam
+
+# Downloaded/prepared reference sequences and indexes
+*.fna
+*.fna.gz
+*.fa.gz
+*.bt2
+*.bt2l
+
+# Workflow/runtime files
+.snakemake/
+slurm-*.out
+*.log
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+
+# Local configuration and credentials; commit only examples
+config.local.*
+*.secret
+.env

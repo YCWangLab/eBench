@@ -9,6 +9,7 @@
 # Consolidated Truth600 reference-genome preparation.
 # Usage:
 #   bash prepare_reference_genomes.sh manifest
+#   bash prepare_reference_genomes.sh select SEED
 #   bash prepare_reference_genomes.sh download
 #   bash prepare_reference_genomes.sh split
 #   bash prepare_reference_genomes.sh all
@@ -22,9 +23,10 @@ SUMMARY_DIR=${SUMMARY_DIR:-$COMMON_INPUTS_DIR/refgenome}
 WORK_ROOT=${WORK_ROOT:-$SCRIPT_DIR/work}
 PLANT_SUMMARY=${PLANT_SUMMARY:-$SUMMARY_DIR/p_assembly_summary.txt}
 
-MICRO_LIST="$SCRIPT_DIR/accession_aemicros_list.txt"
-ANIMAL_LIST="$SCRIPT_DIR/accession_aeanimals_list.txt"
-PLANT_LIST="$SCRIPT_DIR/accession_aeplants_list.txt"
+SELECTED_LIST_DIR=${SELECTED_LIST_DIR:-$SCRIPT_DIR}
+MICRO_LIST="$SELECTED_LIST_DIR/accession_aemicros_list.txt"
+ANIMAL_LIST="$SELECTED_LIST_DIR/accession_aeanimals_list.txt"
+PLANT_LIST="$SELECTED_LIST_DIR/accession_aeplants_list.txt"
 
 MANIFEST_DIR="$WORK_ROOT/manifests"
 DOWNLOAD_DIR="$WORK_ROOT/genomes"
@@ -160,10 +162,16 @@ split_all() {
 }
 
 case "${1:-}" in
+    select)
+        [[ -n "${2:-}" ]] || { echo "Usage: $0 select SEED" >&2; exit 2; }
+        python3 "$SCRIPT_DIR/select_truth600.py" --summary-dir "$SUMMARY_DIR" \
+            --output-dir "$WORK_ROOT/selection" --seed "$2"
+        echo "Next: SELECTED_LIST_DIR=$WORK_ROOT/selection bash $0 all"
+        ;;
     manifest) build_manifests ;;
     download) download_all ;;
     split) split_all ;;
     all) build_manifests; download_all; split_all ;;
-    *) echo "Usage: $0 {manifest|download|split|all}" >&2; exit 2 ;;
+    *) echo "Usage: $0 {select SEED|manifest|download|split|all}" >&2; exit 2 ;;
 esac
 

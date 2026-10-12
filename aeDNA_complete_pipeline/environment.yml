@@ -1,0 +1,19 @@
+name: aedna-benchmark
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python>=3.10
+  - snakemake-minimal
+  - bowtie2
+  - samtools
+  - seqkit
+  - bbmap
+  - openjdk
+  - pip
+  - pip:
+      - metaDMG
+
+# Install Gargammel (fragSim/deamSim) and Mutation-Simulator separately when
+# suitable packages are unavailable. Record exact versions or commits.
